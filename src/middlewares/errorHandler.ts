@@ -55,12 +55,13 @@ export const errorHandlerMiddleware = (
     statusCode = 401;
     logger.warn({ err, path: req.path });
   } else {
-    logger.fatal({ err, path: req.path });
+    logger.error({ err, path: req.path }, "Unhandled error");
   }
 
   if (!res.headersSent) {
     return res.status(statusCode).json({
       message,
+      requestId: req.requestId,
       error: {
         code,
         ...(details ? { details } : {}),

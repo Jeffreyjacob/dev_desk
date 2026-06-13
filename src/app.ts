@@ -7,7 +7,7 @@ import { globalRateLimit } from "./middlewares/ratelimit";
 import cookieParser from "cookie-parser";
 import { logger } from "./config/logger";
 import { env } from "./config/env";
-import { nanoid } from "zod";
+import { nanoid } from "nanoid";
 import { HealthCheck } from "./shared/healthCheck/healthCheck";
 import { errorHandlerMiddleware } from "./middlewares/errorHandler";
 import { NotFoundMiddleware } from "./middlewares/notFoundHandler";
@@ -39,6 +39,7 @@ class App {
   setParsingMiddlwares() {
     this.express.use((req, res, next) => {
       if (req.originalUrl === "/api/v1/webhook") {
+        express.raw({ type: "application/json" })(req, res, next);
       } else {
         express.json()(req, res, next);
       }
