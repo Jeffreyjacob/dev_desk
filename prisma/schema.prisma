@@ -11,3 +11,282 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+
+enum WorkspacePlan {
+  FREE  // max 3 projects, max 5 members, no webhooks
+  PRO   // unlimited projects, unlimited members, webhook enabled
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InviteStatus {
+  PENDING   // waiting for recipient to accept
+  ACCEPTED  // recipient accepted, WorkspaceMember created
+  EXPIRED   // 48 hours passed without acceptance
+  REVOKED   // manually cancelled by admin
+}
+
+enum ProjectStatus {
+   ACTIVE    // visible and accepting tasks
+   ARCHIVED   // read-only, hidden from default views
+}
+
+enum TaskStatus {
+  TODO       // not started
+  IN_PROGRESS   // being worked on
+  IN_REVIEW   // waiting for review
+  DONE    // completed
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum WebhookDeliveryStatus {
+  PENDING   // job queued, not yet attempted
+  SUCCESS   // delivered successfully (2xx response)
+  FAILED    // all retry attempts exhausted
+}
+
+
+model User {
+  id    String    @id  @default(uuid())
+  email   String    @unique
+  passwordHash     String
+  name             String
+  emailVerified     Boolean  @default(false)
+  emailVerificationToken     String?   @unique
+  emailVerificationExpiresAt   DateTime?
+  resetPasswordToken        String?   @unique
+  resetPasswordExpiresAt    DateTime?
+  refreshTokenHash          String?
+  lastLoginAt               DateTime?
+  isActive                 Boolean @default(true)
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+
+
+ // Relations 
+ memberships      WorkspaceMember[]    
+ inviteSent       WorkspaceInvite[] @relation("InvitedBy")
+ tasksAssigned     Task[]  @relation("TaskAssignedTo")
+ tasksCreated      Task[]  @relation("TaskCreatedBy")
+ notifications     Notification[]
+ auditLogs      AuditLog[]  @relation("AuditActor")
+
+  @@index([isActive])
+}
+
+model Workspace {
+  id       String   @id  @default(uuid())
+  name     String 
+  slug     String   @unique
+  plan     WorkspacePlan   @default(FREE)
+  stripeCustomerId  String?  @unique
+  stripeSubscriptionId   String?  @unique
+  maxMembers    Int      @default(5)
+  maxProjects   Int      @default(3)
+  webhooksEnabled  Boolean  @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relationships
+  members  WorkspaceMember[]
+  invites  WorkspaceInvite[]
+  projects Project[]
+  tasks    Task[]
+  notifications Notification[]
+  auditLogs  AuditLog[]
+  webhookEndpoints WebhookEndpoint[]
+
+
+  @@index([slug])
+  @@index([stripeCustomerId])
+}
+
+model WorkspaceMember {
+  id     String   @id  @default(uuid())
+  workspaceId   String
+  workspace     Workspace   @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId],references: [id],onDelete: Cascade)
+  role          MemberRole  @default(MEMBER)
+  permissions   Json    @default("{}")
+  joinedAt      DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+
+  @@unique([workspaceId,userId])
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([workspaceId,role])
+}
+
+model WorkspaceInvite {
+  id       String     @id @default(uuid())
+  workspaceId   String
+  workspace     Workspace   @relation(fields: [workspaceId],references: [id], onDelete: Cascade)
+  invitedByUserId     String
+  invitedBy      User    @relation("InvitedBy",fields: [invitedByUserId],references: [id],onDelete: Cascade)
+  email         String
+  role     MemberRole  @default(MEMBER)
+  token    String   @unique
+  expiresAt   DateTime  // 48 hours from creation
+  status      InviteStatus   @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([workspaceId,email])
+  @@index([token])
+  @@index([workspaceId])
+  @@index([workspaceId,status])
+  @@index([expiresAt,status])
+}
+
+model Project {
+  id   String   @id  @default(uuid())
+  workspaceId   String
+  workspace     Workspace   @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  name   String
+  description   String?
+  status     ProjectStatus   @default(ACTIVE)
+  createdById    String
+  createdAt DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+
+  tasks    Task[]
+
+  @@index([workspaceId])
+  @@index([workspaceId,status])
+  @@index([workspaceId,createdById])
+}
+
+
+model Task {
+  id     String     @id @default(uuid())
+  workspaceId   String    // denormalized -- see explanation above
+  workspace      Workspace   @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  projectId    String
+  project     Project   @relation(fields: [projectId],references: [id],onDelete: Cascade)
+  title       String
+  description  String?
+  status      TaskStatus  @default(TODO)
+  priority    TaskPriority  @default(MEDIUM)
+  assignedToId   String?
+  assignedTo     User?   @relation("TaskAssignedTo",fields: [assignedToId],references: [id],onDelete: SetNull)
+  dueDate        DateTime?
+  createdById    String
+  createdBy      User    @relation("TaskCreatedBy",fields: [createdById],references: [id])
+  version        Int     @default(0)   // optimstic locking
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([workspaceId,projectId])
+  @@index([workspaceId,assignedToId])
+  @@index([workspaceId,status])
+  @@index([workspaceId,priority])
+  @@index([workspaceId,dueDate])
+  @@index([projectId,status])
+}
+
+
+model  Notification {
+  id   String   @id @default(uuid())
+  userId    String
+  user     User    @relation(fields: [userId],references: [id],onDelete: Cascade)
+  workspaceId  String
+  workspace   Workspace @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  type      String   // TASK_ASSIGNED,MEMBER_INVITED, PROJECT_ARCHIVED 
+  title     String
+  body      String
+  read      Boolean   @default(false)
+  resourceType   String?
+  resourceId     String?
+  createdAt      DateTime   @default(now())
+
+
+  @@index([userId,read])
+  @@index([userId,workspaceId])
+  @@index([userId,createdAt])
+}
+
+model AuditLog {
+  id    String   @id  @default(uuid())
+  workspaceId   String
+  workspace    Workspace  @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  actorId      String?
+  actor        User?  @relation("AuditActor",fields: [actorId],references: [id])
+  action       String
+  resourceType   String
+  resourceId     String
+  before          Json?
+  after           Json?
+  metadata        Json?
+  createdAt       DateTime   @default(now())
+
+
+  @@index([workspaceId,createdAt])
+  @@index([workspaceId,actorId])
+  @@index([resourceType,actorId])
+  @@index([resourceType,resourceId])
+  @@index([workspaceId,action])
+}
+
+
+model WebhookEndpoint {
+  id     String   @id  @default(uuid())
+  workspaceId   String
+  workspace     Workspace  @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  url           String
+  secret        String
+  events        String[]
+  isActive      Boolean  @default(true)
+  descriptoon   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+ 
+  deliveries    WebhookDelivery[]
+
+  @@index([workspaceId])
+  @@index([workspaceId,isActive])
+}
+
+
+model  WebhookDelivery {
+  id    String   @id @default(uuid())
+  endpointId    String
+  endpoint     WebhookEndpoint  @relation(fields: [endpointId],references: [id],onDelete: Cascade)
+  workspaceId   String    // denormalized for fast workspace queries
+  event         String    // event type that triggered this
+  payload       Json
+  responseStatus   Int?
+  responseBody     String?
+  attempt          Int     @default(1)
+  status           WebhookDeliveryStatus  @default(PENDING)
+  deliveredAt      DateTime? 
+  createdAt        DateTime   @default(now())
+
+
+  @@index([endpointId])
+  @@index([endpointId,status])
+  @@index([workspaceId,event])
+  @@index([workspaceId,createdAt])
+}
+
+
+
+
+
+
+
+
