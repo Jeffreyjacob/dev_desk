@@ -95,6 +95,7 @@ export class WorkspaceAuthRepository {
       },
       include: {
         workspace: true,
+        user: true,
       },
     });
   }

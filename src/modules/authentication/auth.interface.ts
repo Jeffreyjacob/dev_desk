@@ -49,6 +49,7 @@ export interface ILoginResponse {
     }[];
   };
   accessToken: string;
+  refreshToken: string;
 }
 
 export interface IActivateWorkspaceResponse {
@@ -63,10 +64,11 @@ export interface IActivateWorkspaceResponse {
 
 export interface IRefreshTokenResponse {
   accessToken: string;
+  refreshToken: string;
 }
 
 export interface IForgetPasswordPayload {
-  accessToken: string;
+  email: string;
 }
 
 export interface IResetPasswordPayload {
