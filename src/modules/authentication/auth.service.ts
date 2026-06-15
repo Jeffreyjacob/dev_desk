@@ -323,7 +323,7 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string, refreshToken: string): Promise<IAuthMessage> {
+  async logout(userId: string): Promise<IAuthMessage> {
     await this.userRepo.updateById(userId, {
       refreshTokenHash: null,
     });
@@ -403,6 +403,26 @@ export class AuthService {
     return {
       message:
         "Password reset successfully. Please login with your new password.",
+    };
+  }
+
+  async getMe(userId: string) {
+    const user = await this.userRepo.findByEmailWithWorkspace(userId as any);
+    if (!user) throw new NotFoundError("User not found");
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      lastLoginAt: user.lastLoginAt,
+      workspace: user.memberships.map((m) => ({
+        id: m.workspace.id,
+        name: m.workspace.name,
+        slug: m.workspace.slug,
+        role: m.role,
+        plan: m.workspace.plan,
+      })),
     };
   }
 }

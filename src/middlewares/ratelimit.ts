@@ -24,3 +24,27 @@ export const globalRateLimit = rateLimit({
   },
   store: getStore("global"),
 });
+
+export const authRateLimit = rateLimit({
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max: 15,
+  legacyHeaders: false,
+  standardHeaders: true,
+  message: {
+    success: false,
+    message: "Too many request, please try again later",
+  },
+  store: getStore("auth"),
+});
+
+export const loginRateLimit = rateLimit({
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max: 10,
+  legacyHeaders: false,
+  standardHeaders: true,
+  message: {
+    succes: false,
+    message: "Too many request, please try again later",
+  },
+  store: getStore("login"),
+});
