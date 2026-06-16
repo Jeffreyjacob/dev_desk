@@ -1,7 +1,7 @@
 import { prisma } from "../../config/database";
 import { env } from "../../config/env";
 import { redis } from "../../config/redis";
-import { allQueues } from "../../job";
+import { allQueue } from "../../job";
 
 interface DependencyHealth {
   status: "healthy" | "unhealthy";
@@ -62,7 +62,7 @@ export class HealthCheck {
     const start = Date.now();
     try {
       const queues = await Promise.all(
-        allQueues.map(async (queue) => ({
+        allQueue.map(async (queue) => ({
           [queue.name]: await queue.getJobCounts(),
         }))
       );

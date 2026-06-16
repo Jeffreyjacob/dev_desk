@@ -4,6 +4,7 @@ import { Prisma } from "../generated/prisma/client";
 import jwt from "jsonwebtoken";
 import { logger } from "../config/logger";
 import { env } from "../config/env";
+import { ZodError } from "zod";
 
 export const errorHandlerMiddleware = (
   err: Error,
@@ -54,6 +55,11 @@ export const errorHandlerMiddleware = (
     code = "UNAUTHORIZED";
     statusCode = 401;
     logger.warn({ err, path: req.path });
+  } else if (err instanceof ZodError) {
+    message = "Validation failed";
+    code = "VALIDATION_ERROR";
+    statusCode = 422;
+    details = err.issues;
   } else {
     logger.error({ err, path: req.path }, "Unhandled error");
   }

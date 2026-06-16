@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import {
+  forgetPasswordSchema,
   loginSchema,
   registerSchema,
   resendVerificationSchema,
@@ -77,8 +78,8 @@ export class AuthController {
   }
 
   async forgetPassword(req: Request, res: Response): Promise<void> {
-    const data = resetPasswordSchema.parse(req.body);
-    const result = await this.authService.resetPassword(data);
+    const data = forgetPasswordSchema.parse(req.body);
+    const result = await this.authService.forgetPassword(data);
     ResponseHelper.success(res, "", 200, result.message);
   }
 

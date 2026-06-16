@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import { HealthCheck } from "./shared/healthCheck/healthCheck";
 import { errorHandlerMiddleware } from "./middlewares/errorHandler";
 import { NotFoundMiddleware } from "./middlewares/notFoundHandler";
+import authRoutes from "./modules/authentication/auth.routes";
 
 class App {
   public readonly express: Application;
@@ -78,6 +79,8 @@ class App {
       const statusCode = health.status === "healthy" ? 200 : 503;
       res.status(statusCode).json(health);
     });
+
+    this.express.use("/api/v1/auth", authRoutes);
   }
   setErrorMiddleware() {
     this.express.use(NotFoundMiddleware);
