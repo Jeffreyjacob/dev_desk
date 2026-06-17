@@ -57,6 +57,19 @@ enum WebhookDeliveryStatus {
   FAILED    // all retry attempts exhausted
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
 
 model User {
   id    String    @id  @default(uuid())
@@ -108,6 +121,8 @@ model Workspace {
   notifications Notification[]
   auditLogs  AuditLog[]
   webhookEndpoints WebhookEndpoint[]
+  subscription    Subscription?
+  billingHistory  BillingHistory[]
 
 
   @@index([slug])
@@ -142,6 +157,7 @@ model WorkspaceInvite {
   role     MemberRole  @default(MEMBER)
   token    String   @unique
   expiresAt   DateTime  // 48 hours from creation
+  expiryJobId   String?
   status      InviteStatus   @default(PENDING)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -283,6 +299,47 @@ model  WebhookDelivery {
   @@index([endpointId,status])
   @@index([workspaceId,event])
   @@index([workspaceId,createdAt])
+}
+
+model Subscription {
+  id   String   @id @default(uuid())
+  workspaceId   String   @unique
+  workspace     Workspace   @relation(fields: [workspaceId],references: [id],onDelete: Cascade)
+  stripeSubscriptionId   String   @unique
+  stripeCustomerId   String
+  status    SubscriptionStatus   @default(ACTIVE)
+  plan      WorkspacePlan  
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  cancelledAt           DateTime
+  cancelAtPeriodEnd     Boolean
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  billingHistory   BillingHistory[]
+
+  @@index([workspaceId])
+  @@index([stripeSubscriptionId])
+  @@index([status])
+}
+
+
+model BillingHistory {
+  id     String     @id  @default(uuid())
+  workspaceId   String 
+  workspace     Workspace  @relation(fields: [workspaceId],references: [id])
+  subscriptionId   String
+  subscription     Subscription  @relation(fields: [subscriptionId],references: [id])
+  stripeInvoiceId    String     @unique
+  currency          String    @default("usd")
+  status            PaymentStatus   @default(SUCCEEDED)
+  description       String?
+  invoiceUrl        String?
+  createdAt         DateTime    @default(now())
+
+
+  @@index([workspaceId])
+  @@index([subscriptionId])
 }
 
 
