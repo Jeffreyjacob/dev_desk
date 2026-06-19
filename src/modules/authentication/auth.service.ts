@@ -32,6 +32,7 @@ import {
 } from "./auth.interface";
 import { UserRepository, WorkspaceAuthRepository } from "./auth.repository";
 import bcrypt from "bcryptjs";
+import { CompleteProfileInput } from "./auth.validation";
 
 export class AuthService {
   constructor(
@@ -423,6 +424,32 @@ export class AuthService {
         role: m.role,
         plan: m.workspace.plan,
       })),
+    };
+  }
+
+  async completeProfile(data: CompleteProfileInput) {
+    const user = await this.userRepo.findFirst({
+      where: { profileSetupExpiresAt: data.token },
+    });
+
+    if (!user) throw new BadRequestError("Invalid or expired setup link");
+
+    if (user.profileSetupExpiresAt && user.profileSetupExpiresAt < new Date())
+      throw new BadRequestError(
+        "Setup link has expired. Please contact your workspace admin"
+      );
+
+    const passwordHash = await bcrypt.hash(data.password, env.BCRYPT_ROUNDS);
+
+    await this.userRepo.updateById(user.id, {
+      name: data.name,
+      passwordHash,
+      profileSetupToken: null,
+      profileSetupExpiresAt: null,
+    });
+
+    return {
+      message: "Profile completed. You can now login",
     };
   }
 }

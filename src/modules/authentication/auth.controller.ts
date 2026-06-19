@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import {
+  completeProfileSchema,
   forgetPasswordSchema,
   loginSchema,
   registerSchema,
@@ -93,5 +94,11 @@ export class AuthController {
     const userId = req.user!.userId;
     const result = await this.authService.getMe(userId);
     ResponseHelper.success(res, result, 200, "User Fetched");
+  }
+
+  async completeProfile(req: Request, res: Response): Promise<void> {
+    const data = completeProfileSchema.parse(req.body);
+    const result = await this.authService.completeProfile(data);
+    ResponseHelper.success(res, "", 200, result.message);
   }
 }

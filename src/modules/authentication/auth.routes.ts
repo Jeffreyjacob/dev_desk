@@ -52,6 +52,11 @@ router.post(
 );
 
 router.post(
+  "/complete-profile",
+  AsyncHandler(authController.completeProfile.bind(authController))
+);
+
+router.post(
   "/workspace/:workspaceId/activate",
   authenticate,
   AsyncHandler(authController.activateWorkspace.bind(authController))

@@ -44,6 +44,7 @@ export abstract class TenantRepository<
     where?: Prisma.Args<TDelegate, "findMany">["where"];
     include?: Prisma.Args<TDelegate, "findMany">["include"];
     orderBy?: Prisma.Args<TDelegate, "findMany">["orderBy"];
+    select?: Prisma.Args<TDelegate, "findMany">["select"];
     page?: number;
     pageSize?: number;
   }): Promise<OffsetPaginationResponse<TResult>> {
@@ -53,6 +54,7 @@ export abstract class TenantRepository<
       orderBy: args.orderBy,
       page: args.page,
       pageSize: args.pageSize,
+      select: args.select,
     });
   }
 
@@ -78,16 +80,14 @@ export abstract class TenantRepository<
   }
 
   async createInWorkSpace({
-    workspaceId,
     data,
     include,
   }: {
-    workspaceId: string;
     data: Prisma.Args<TDelegate, "create">["data"];
     include?: Prisma.Args<TDelegate, "create">["include"];
   }): Promise<TResult> {
     return super.create({
-      data: { workspaceId, ...data } as any,
+      data,
       include,
     });
   }

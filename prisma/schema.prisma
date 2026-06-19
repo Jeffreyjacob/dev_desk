@@ -82,6 +82,8 @@ model User {
   resetPasswordToken        String?   @unique
   resetPasswordExpiresAt    DateTime?
   refreshTokenHash          String?
+  profileSetupToken         String?   @unique
+  profileSetupExpiresAt     DateTime?
   lastActiveWorkspaceId     String?
   lastLoginAt               DateTime?
   isActive                 Boolean @default(true)

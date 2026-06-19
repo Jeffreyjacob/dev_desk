@@ -12,11 +12,13 @@ import { HealthCheck } from "./shared/healthCheck/healthCheck";
 import { errorHandlerMiddleware } from "./middlewares/errorHandler";
 import { NotFoundMiddleware } from "./middlewares/notFoundHandler";
 import authRoutes from "./modules/authentication/auth.routes";
+import { registerAllListeners } from "./events/listeners";
 
 class App {
   public readonly express: Application;
   constructor() {
     this.express = express();
+    registerAllListeners();
     this.setSecurityMiddlewares();
     this.setParsingMiddlwares();
     this.setLoggingMiddlwares();

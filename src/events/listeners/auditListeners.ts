@@ -43,4 +43,21 @@ export function auditListeners(): void {
       });
     }
   );
+
+  eventBus.on(
+    "member.role_changed",
+    async ({ userId, workspaceId, previousRole, newRole, changedBy }) => {
+      await prisma.auditLog.create({
+        data: {
+          workspaceId,
+          actorId: changedBy,
+          action: "member.role_changed",
+          resourceType: "WorkspaceMember",
+          resourceId: userId,
+          before: { role: previousRole },
+          after: { role: newRole },
+        },
+      });
+    }
+  );
 }
