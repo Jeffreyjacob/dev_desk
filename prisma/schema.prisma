@@ -93,6 +93,7 @@ model User {
 
  // Relations 
  memberships      WorkspaceMember[]    
+ projects         Project[]
  inviteSent       WorkspaceInvite[] @relation("InvitedBy")
  tasksAssigned     Task[]  @relation("TaskAssignedTo")
  tasksCreated      Task[]  @relation("TaskCreatedBy")
@@ -179,6 +180,7 @@ model Project {
   description   String?
   status     ProjectStatus   @default(ACTIVE)
   createdById    String
+  createdBy     User     @relation(fields: [createdById],references: [id])
   createdAt DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   

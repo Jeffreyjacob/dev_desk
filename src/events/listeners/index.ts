@@ -1,7 +1,11 @@
 import { auditListeners } from "./auditListeners";
-import { memberListeners } from "./memberListeners";
+import { emailListeners } from "./emailListeners";
+import { notificationListeners } from "./notificationListener";
+import { webhookListners } from "./webhookListeners";
 
 export function registerAllListeners(): void {
-  memberListeners();
+  emailListeners();
   auditListeners();
+  notificationListeners();
+  webhookListners();
 }
