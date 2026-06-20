@@ -429,7 +429,7 @@ export class AuthService {
 
   async completeProfile(data: CompleteProfileInput) {
     const user = await this.userRepo.findFirst({
-      where: { profileSetupExpiresAt: data.token },
+      where: { profileSetupToken: data.token },
     });
 
     if (!user) throw new BadRequestError("Invalid or expired setup link");

@@ -11,7 +11,7 @@ import { MemberRole } from "../../generated/prisma/enums";
 const router = Router();
 
 router.get(
-  "/invote/:token",
+  "/invite/:token",
   AsyncHandler(workspaceController.getInviteDetails.bind(workspaceController))
 );
 
