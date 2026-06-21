@@ -13,6 +13,7 @@ import { errorHandlerMiddleware } from "./middlewares/errorHandler";
 import { NotFoundMiddleware } from "./middlewares/notFoundHandler";
 import authRoutes from "./modules/authentication/auth.routes";
 import workspaceRoutes from "./modules/workspace/workspace.routes";
+import projectRoutes from "./modules/project/project.routes";
 import { registerAllListeners } from "./events/listeners";
 
 class App {
@@ -85,6 +86,7 @@ class App {
 
     this.express.use("/api/v1/auth", authRoutes);
     this.express.use("/api/v1/workspace", workspaceRoutes);
+    this.express.use("/api/v1/project", projectRoutes);
   }
   setErrorMiddleware() {
     this.express.use(NotFoundMiddleware);

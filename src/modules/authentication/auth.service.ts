@@ -53,7 +53,7 @@ export class AuthService {
 
     const user = await this.userRepo.create({
       data: {
-        name: data.email,
+        name: data.name,
         email: data.email,
         passwordHash,
         emailVerificationToken: verificationToken,
