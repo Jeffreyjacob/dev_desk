@@ -14,6 +14,7 @@ import { NotFoundMiddleware } from "./middlewares/notFoundHandler";
 import authRoutes from "./modules/authentication/auth.routes";
 import workspaceRoutes from "./modules/workspace/workspace.routes";
 import projectRoutes from "./modules/project/project.routes";
+import taskROutes from "./modules/task/task.route";
 import { registerAllListeners } from "./events/listeners";
 
 class App {
@@ -87,6 +88,7 @@ class App {
     this.express.use("/api/v1/auth", authRoutes);
     this.express.use("/api/v1/workspace", workspaceRoutes);
     this.express.use("/api/v1/project", projectRoutes);
+    this.express.use("/api/v1/task", taskROutes);
   }
   setErrorMiddleware() {
     this.express.use(NotFoundMiddleware);
