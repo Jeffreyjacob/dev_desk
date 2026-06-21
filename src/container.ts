@@ -34,7 +34,7 @@ const workspaceService = new WorkspaceService(
   userRepo
 );
 const projectService = new ProjectService(projectRepo, workspaceRepo);
-const taskService = new TaskService(taskRepo, projectRepo);
+const taskService = new TaskService(taskRepo, projectRepo, workspaceMemberRepo);
 
 export const authController = new AuthController(authService);
 export const workspaceController = new WorkspaceController(workspaceService);

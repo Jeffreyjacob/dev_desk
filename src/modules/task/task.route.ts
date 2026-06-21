@@ -38,7 +38,7 @@ router.patch(
   "/workspaces/:workspaceId/tasks/:id",
   authenticate,
   requireWorkspace,
-  requireRole(),
+  requireRole(MemberRole.ADMIN, MemberRole.OWNER),
   AsyncHandler(taskController.updateTask.bind(taskController))
 );
 

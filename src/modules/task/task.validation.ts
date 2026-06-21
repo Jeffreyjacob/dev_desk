@@ -5,7 +5,7 @@ export const createTaskSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
-  dueDate: z.string().optional(),
+  dueDate: z.coerce.date().optional(),
 });
 
 export const getTaskSchema = z.object({
@@ -20,6 +20,7 @@ export const updateTaskSchema = z.object({
   title: z.string().min(3).optional(),
   description: z.string().optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
+  dueDate: z.coerce.date().optional(),
   version: z.number().min(0),
 });
 

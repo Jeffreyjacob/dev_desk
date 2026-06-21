@@ -21,7 +21,7 @@ export interface IGetTaskListsResponse {
     title: string;
     status: TaskStatus;
     priority: TaskPriority;
-    assignedTo: { id: string; name: string; email: string };
+    assignedTo: { id: string; name: string; email: string } | null;
     dueDate: Date | null;
     version: number;
   }[];
@@ -60,7 +60,7 @@ export interface IUpdateTaskResponse {
 
 export interface IAssignTaskResponse {
   id: string;
-  assignedTo: { id: string; name: string; email: string };
+  assignedTo: { id: string; name: string; email: string } | null;
   version: number;
   updatedAt: Date;
 }

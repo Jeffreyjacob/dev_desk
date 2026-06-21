@@ -7,6 +7,7 @@ import {
   NotFoundError,
 } from "../../shared/errors";
 import { ProjectRepository } from "../project/project.repository";
+import { WorkspaceMemberRespository } from "../workspace/workspace.repository";
 import {
   IAssignTaskResponse,
   IGetTaskDetails,
@@ -26,7 +27,8 @@ import {
 export class TaskService {
   constructor(
     private readonly taskRepo: TaskRepository,
-    private readonly projectRepo: ProjectRepository
+    private readonly projectRepo: ProjectRepository,
+    private readonly workspaceMemberRepo: WorkspaceMemberRespository
   ) {}
 
   async createTask(
@@ -73,11 +75,13 @@ export class TaskService {
         title: task.title,
         status: task.status,
         priority: task.priority,
-        assignedTo: {
-          id: (task as any).assignedTo.id as string,
-          name: (task as any).assignedTo.name as string,
-          email: (task as any).assignedTo.email as string,
-        },
+        assignedTo: (task as any).assignedTo
+          ? {
+              id: (task as any).assignedTo.id as string,
+              name: (task as any).assignedTo.name as string,
+              email: (task as any).assignedTo.email as string,
+            }
+          : null,
         dueDate: task.dueDate,
         version: task.version,
       })),
@@ -138,6 +142,17 @@ export class TaskService {
 
     if (!existingTask) throw new NotFoundError("Task not found");
 
+    if (data.assignedToId) {
+      const isMember = this.workspaceMemberRepo.findMember(
+        workspaceId,
+        data.assignedToId
+      );
+      if (!isMember)
+        throw new BadRequestError(
+          "cannot assign task to user that's not in your workspace"
+        );
+    }
+
     const updatedCount = await this.taskRepo.updateWithVersionCheck(
       workspaceId,
       taskId,
@@ -167,11 +182,13 @@ export class TaskService {
 
     return {
       id: updateData.id,
-      assignedTo: {
-        id: updateData.assignedTo?.id!,
-        name: updateData.assignedTo?.name!,
-        email: updateData.assignedTo?.email!,
-      },
+      assignedTo: updateData.assignedTo
+        ? {
+            id: updateData.assignedTo.id,
+            name: updateData.assignedTo.name,
+            email: updateData.assignedTo.email,
+          }
+        : null,
       version: updateData.version,
       updatedAt: updateData.updatedAt,
     };

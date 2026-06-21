@@ -86,7 +86,7 @@ export class TaskRepository extends TenantRepository<
   }
 
   async getTaskDetails(workspaceId: string, taskId: string) {
-    return prisma.task.findUnique({
+    return prisma.task.findFirst({
       where: {
         id: taskId,
         workspaceId,
