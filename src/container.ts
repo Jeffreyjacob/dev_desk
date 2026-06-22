@@ -4,6 +4,9 @@ import {
   WorkspaceAuthRepository,
 } from "./modules/authentication/auth.repository";
 import { AuthService } from "./modules/authentication/auth.service";
+import { NotificationController } from "./modules/notification/notification.controller";
+import { NotificationRepository } from "./modules/notification/notification.repository";
+import { NotificationService } from "./modules/notification/notification.service";
 import { ProjectController } from "./modules/project/project.controller";
 import { ProjectRepository } from "./modules/project/project.repository";
 import { ProjectService } from "./modules/project/project.service";
@@ -25,6 +28,7 @@ const workspaceMemberRepo = new WorkspaceMemberRespository();
 const workspaceInviteRepo = new WorkspaceInviteRepository();
 const projectRepo = new ProjectRepository();
 const taskRepo = new TaskRepository();
+const notificationRepo = new NotificationRepository();
 
 const authService = new AuthService(userRepo, workspaceAuthRepo);
 const workspaceService = new WorkspaceService(
@@ -35,8 +39,12 @@ const workspaceService = new WorkspaceService(
 );
 const projectService = new ProjectService(projectRepo, workspaceRepo);
 const taskService = new TaskService(taskRepo, projectRepo, workspaceMemberRepo);
+const notificationService = new NotificationService(notificationRepo);
 
 export const authController = new AuthController(authService);
 export const workspaceController = new WorkspaceController(workspaceService);
 export const projectController = new ProjectController(projectService);
 export const taskController = new TaskController(taskService);
+export const notificationController = new NotificationController(
+  notificationService
+);

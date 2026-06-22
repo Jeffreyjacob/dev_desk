@@ -1,5 +1,5 @@
 import { prisma } from "../../config/database";
-import { Prisma } from "../../generated/prisma/client";
+import { Notification, Prisma } from "../../generated/prisma/client";
 import { BaseRepository } from "../../shared/repository/baseRepository";
 import { IGetNotificationInput } from "./notification.validation";
 
@@ -24,7 +24,7 @@ export class NotificationRepository extends BaseRepository<
   }
 
   async getNotificationByList(userId: string, data: IGetNotificationInput) {
-    return this.findManyWithOffsetPagination({
+    return await this.findManyWithOffsetPagination({
       where: {
         userId,
         ...(data.workspaceId && { workspaceId: data.workspaceId }),
@@ -45,7 +45,7 @@ export class NotificationRepository extends BaseRepository<
   }
 
   async getNotificationDetail(notificationId: string) {
-    return this.findUnique({
+    return await this.findUnique({
       where: {
         id: notificationId,
       },

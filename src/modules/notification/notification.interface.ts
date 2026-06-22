@@ -2,6 +2,7 @@ import { OffsetPaginationMeta } from "../../shared/repository/baseRepository";
 
 export interface IGetNotificationListResponse {
   data: {
+    id: string;
     workspace: {
       id: string;
       name: string;
@@ -15,6 +16,7 @@ export interface IGetNotificationListResponse {
 }
 
 export interface IGetNotificationDetails {
+  id: string;
   workspace: {
     id: string;
     name: string;
