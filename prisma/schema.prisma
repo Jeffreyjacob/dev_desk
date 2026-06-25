@@ -62,6 +62,7 @@ enum SubscriptionStatus {
   PAST_DUE
   CANCELLED
   EXPIRED
+  TRIALING
 }
 
 enum PaymentStatus {
@@ -315,8 +316,9 @@ model Subscription {
   plan      WorkspacePlan  
   currentPeriodStart     DateTime
   currentPeriodEnd       DateTime
-  cancelledAt           DateTime
+  cancelledAt           DateTime?
   cancelAtPeriodEnd     Boolean
+  lastEventTimestamp    DateTime?
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
@@ -345,6 +347,31 @@ model BillingHistory {
   @@index([workspaceId])
   @@index([subscriptionId])
 }
+
+enum WebhookEventStatus {
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+model StripeWebhookEvent {
+  id   String     @id  @default(uuid())
+  stripeEventId   String   @unique
+  eventType       String
+  status          WebhookEventStatus  @default(PROCESSING)
+  payload         Json
+  error           String?
+  attempts        Int     @default(1)
+  processedAt     DateTime?
+  createdAt       DateTime      @default(now())
+
+
+  @@index([status])
+  @@index([eventType])
+}
+
+
+
 
 
 
