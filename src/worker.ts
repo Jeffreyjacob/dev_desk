@@ -1,9 +1,11 @@
 import { prisma } from "./config/database";
 import { logger } from "./config/logger";
 import { disconnectRedis } from "./config/redis";
+import { scheduleReconciliation } from "./job/queues/reconcile";
 import { createDLQWorker } from "./job/workers/dlq";
 import { createEmailWorker } from "./job/workers/email";
 import { createInviteWorker } from "./job/workers/invite";
+import { createReconciliationWorker } from "./job/workers/reconcile";
 
 export async function startWorker() {
   try {
@@ -12,6 +14,9 @@ export async function startWorker() {
     const emailWorker = createEmailWorker();
     const deadletterWorker = createDLQWorker();
     const inviteExpiryWorker = createInviteWorker();
+    const reconciliationWorker = createReconciliationWorker();
+
+    await scheduleReconciliation();
 
     const gracefulShutdown = async (signal: string) => {
       logger.info("starting graceful shutdown ...");
@@ -28,6 +33,7 @@ export async function startWorker() {
         await emailWorker.close();
         await deadletterWorker.close();
         await inviteExpiryWorker.close();
+        await reconciliationWorker.close();
         await disconnectRedis();
         logger.info("graceful shutdown shutdown");
         process.exit(0);
