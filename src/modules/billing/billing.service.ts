@@ -30,6 +30,19 @@ export class BillingService {
   ): Promise<{ checkoutUrl: string }> {
     const workspace = await this.workspaceRepo.findById(workspaceId);
     if (!workspace) throw new NotFoundError("unable to find workspace");
+
+    const subscription = await prisma.subscription.findFirst({
+      where: { workspaceId: workspace.id },
+    });
+
+    if (
+      workspace.plan === WorkspacePlan.PRO &&
+      subscription &&
+      subscription.status === SubscriptionStatus.ACTIVE
+    ) {
+      throw new BadRequestError("You already have an active subscription");
+    }
+
     let stripeCustomerId = workspace.stripeCustomerId;
 
     if (!stripeCustomerId) {
@@ -144,10 +157,10 @@ export class BillingService {
           );
       }
 
-      await this.billingRepo.markWebhookProcessed(event.id);
+      await this.billingRepo.markWebhookProcessed(record.id);
     } catch (err: any) {
       const errorType = classifyError(err);
-      await this.billingRepo.markWebhookFailed(event.id, err.message);
+      await this.billingRepo.markWebhookFailed(record.id, err.message);
 
       if (errorType === "transient") {
         logger.warn({

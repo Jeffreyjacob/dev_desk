@@ -33,6 +33,7 @@ import {
 import { UserRepository, WorkspaceAuthRepository } from "./auth.repository";
 import bcrypt from "bcryptjs";
 import { CompleteProfileInput } from "./auth.validation";
+import { email } from "zod";
 
 export class AuthService {
   constructor(

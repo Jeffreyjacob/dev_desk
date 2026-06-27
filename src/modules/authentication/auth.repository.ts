@@ -1,5 +1,6 @@
 import { prisma } from "../../config/database";
 import { Prisma, User, WorkspaceMember } from "../../generated/prisma/client";
+import { BadRequestError } from "../../shared/errors";
 import { BaseRepository } from "../../shared/repository/baseRepository";
 
 export class UserRepository extends BaseRepository<Prisma.UserDelegate, User> {
