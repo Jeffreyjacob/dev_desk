@@ -15,7 +15,8 @@ import { WorkspaceRepository } from "../workspace/workspace.repository";
 import { BillingRepository } from "./billing.repository";
 import { prisma } from "../../config/database";
 import { logger } from "../../config/logger";
-import { error } from "node:console";
+import { classifyError } from "../../shared/utils/dlq.helper";
+import { IGetFailedWebhookInput } from "./billing.validation";
 
 export class BillingService {
   constructor(
@@ -78,7 +79,7 @@ export class BillingService {
     return { message: "Subscription will cancel at the end of the billing" };
   }
 
-  async getFailedWebhooks(data: { page?: number; limit?: number }) {
+  async getFailedWebhooks(data: IGetFailedWebhookInput) {
     return this.billingRepo.findFailedWebhooks(data);
   }
 
@@ -105,32 +106,65 @@ export class BillingService {
   }
 
   async processStripeEvent(event: Stripe.Event) {
-    switch (event.type) {
-      case "checkout.session.completed":
-        await this.handleCheckOutCompleted(
-          event.data.object as Stripe.Checkout.Session
-        );
-        break;
-      case "customer.subscription.updated":
-        await this.handleSubscriptionUpdate(
-          event.data.object as Stripe.Subscription,
-          event.created
-        );
-        break;
-      case "customer.subscription.deleted":
-        await this.handleSubscriptionDeleted(
-          event.data.object as Stripe.Subscription
-        );
-        break;
-      case "invoice.paid":
-        await this.handleInvoicePaid(event.data.object as Stripe.Invoice);
-        break;
+    const existing = await this.billingRepo.findWebhookEventById(event.id);
+    if (existing?.status === "PROCESSED") {
+      return;
+    }
 
-      default:
-        logger.info(
-          { type: event.type },
-          "Unhandled Stripe event type — ignored on purpose"
+    const record = existing
+      ? await this.billingRepo.incrementWebhookAttempts(existing.id)
+      : await this.billingRepo.createWehbookEvent(event);
+
+    try {
+      switch (event.type) {
+        case "checkout.session.completed":
+          await this.handleCheckOutCompleted(
+            event.data.object as Stripe.Checkout.Session
+          );
+          break;
+        case "customer.subscription.updated":
+          await this.handleSubscriptionUpdate(
+            event.data.object as Stripe.Subscription,
+            event.created
+          );
+          break;
+        case "customer.subscription.deleted":
+          await this.handleSubscriptionDeleted(
+            event.data.object as Stripe.Subscription
+          );
+          break;
+        case "invoice.paid":
+          await this.handleInvoicePaid(event.data.object as Stripe.Invoice);
+          break;
+
+        default:
+          logger.info(
+            { type: event.type },
+            "Unhandled Stripe event type — ignored on purpose"
+          );
+      }
+
+      await this.billingRepo.markWebhookProcessed(event.id);
+    } catch (err: any) {
+      const errorType = classifyError(err);
+      await this.billingRepo.markWebhookFailed(event.id, err.message);
+
+      if (errorType === "transient") {
+        logger.warn({
+          eventId: event.id,
+          eventType: event.type,
+          err: err.message,
+        });
+
+        throw err;
+      } else {
+        logger.error(
+          { eventId: event.id, eventType: event.type },
+          "PERMANENT a failure processing webhook - needed manuel review"
         );
+
+        // alert team
+      }
     }
   }
 
@@ -203,7 +237,7 @@ export class BillingService {
       trialing: "TRIALING",
       active: "ACTIVE",
       past_due: "PAST_DUE",
-      cancelled: "CANCELLED",
+      canceled: "CANCELLED",
       unpaid: "EXPIRED",
     };
 
@@ -273,7 +307,7 @@ export class BillingService {
     );
 
     if (!subscription) {
-      console.log("unable to find subscription in databse");
+      logger.info("unable to find subscription in databse");
       return;
     }
 

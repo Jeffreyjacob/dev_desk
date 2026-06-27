@@ -4,6 +4,9 @@ import {
   WorkspaceAuthRepository,
 } from "./modules/authentication/auth.repository";
 import { AuthService } from "./modules/authentication/auth.service";
+import { BillingController } from "./modules/billing/billing.controller";
+import { BillingRepository } from "./modules/billing/billing.repository";
+import { BillingService } from "./modules/billing/billing.service";
 import { NotificationController } from "./modules/notification/notification.controller";
 import { NotificationRepository } from "./modules/notification/notification.repository";
 import { NotificationService } from "./modules/notification/notification.service";
@@ -29,6 +32,7 @@ const workspaceInviteRepo = new WorkspaceInviteRepository();
 const projectRepo = new ProjectRepository();
 const taskRepo = new TaskRepository();
 const notificationRepo = new NotificationRepository();
+const billingRepo = new BillingRepository();
 
 const authService = new AuthService(userRepo, workspaceAuthRepo);
 const workspaceService = new WorkspaceService(
@@ -40,6 +44,7 @@ const workspaceService = new WorkspaceService(
 const projectService = new ProjectService(projectRepo, workspaceRepo);
 const taskService = new TaskService(taskRepo, projectRepo, workspaceMemberRepo);
 const notificationService = new NotificationService(notificationRepo);
+const billingService = new BillingService(billingRepo, workspaceRepo);
 
 export const authController = new AuthController(authService);
 export const workspaceController = new WorkspaceController(workspaceService);
@@ -48,3 +53,4 @@ export const taskController = new TaskController(taskService);
 export const notificationController = new NotificationController(
   notificationService
 );
+export const billingController = new BillingController(billingService);

@@ -42,7 +42,7 @@ export class BillingRepository {
         stripeSubscriptionId: data.stripeSubscriptionId,
         plan: data.plan,
         status: data.status,
-        currentPeriodStart: data.currentPeriodEnd,
+        currentPeriodStart: data.currentPeriodStart,
         currentPeriodEnd: data.currentPeriodEnd,
         cancelAtPeriodEnd: false,
       },
@@ -135,8 +135,8 @@ export class BillingRepository {
     data: StripeWebhookEvent[];
     meta: OffsetPaginationMeta;
   }> {
-    const page = Math.min(payload.page ?? 1, 1);
-    const limit = Math.max(Math.min(payload.limit ?? 15, 1), 100);
+    const page = Math.max(payload.page ?? 1, 1);
+    const limit = Math.min(Math.max(payload.limit ?? 15, 1), 100);
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([

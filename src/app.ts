@@ -16,6 +16,7 @@ import workspaceRoutes from "./modules/workspace/workspace.routes";
 import projectRoutes from "./modules/project/project.routes";
 import taskROutes from "./modules/task/task.route";
 import notificationRoutes from "./modules/notification/notification.route";
+import billingRoutes from "./modules/billing/billing.routes";
 import { registerAllListeners } from "./events/listeners";
 
 class App {
@@ -91,6 +92,7 @@ class App {
     this.express.use("/api/v1/project", projectRoutes);
     this.express.use("/api/v1/task", taskROutes);
     this.express.use("/api/v1/notification", notificationRoutes);
+    this.express.use("/api/v1/billing", billingRoutes);
   }
   setErrorMiddleware() {
     this.express.use(NotFoundMiddleware);
