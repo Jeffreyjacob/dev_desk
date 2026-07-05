@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless_stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      LOKI_HOST: http://loki:3100
+
+    env_file:
+      - .env
+    depends_on:
+      - loki
+    entrypoint: ["sh", "scripts/docker-entrypoint.sh"]
+    command: ["node", "dist/server.js"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless_stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      LOKI_HOST: http://loki:3100
+    depends_on:
+      - loki
+    command: ["node", "dist/worker.js"]
+
+  loki:
+    image: grafana/loki:2.9.0
+    restart: unless_stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - "./config/loki-config.yaml:/etc/loki/local-config.yaml"
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    restart: unless_stopped
+    ports:
+      - "3100:3100"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./config/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+
+volumes:
+  loki_data:
+  grafana_data:
