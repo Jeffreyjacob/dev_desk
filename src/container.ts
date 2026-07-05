@@ -16,6 +16,9 @@ import { ProjectService } from "./modules/project/project.service";
 import { TaskController } from "./modules/task/task.controller";
 import { TaskRepository } from "./modules/task/task.repository";
 import { TaskService } from "./modules/task/task.service";
+import { WebhookController } from "./modules/webhook/webhook.controller";
+import { WebhookRepository } from "./modules/webhook/webhook.repository";
+import { WebhookService } from "./modules/webhook/webhook.service";
 import { WorkspaceController } from "./modules/workspace/workspace.controller";
 import {
   WorkspaceInviteRepository,
@@ -33,6 +36,7 @@ const projectRepo = new ProjectRepository();
 const taskRepo = new TaskRepository();
 const notificationRepo = new NotificationRepository();
 const billingRepo = new BillingRepository();
+const webhookRepo = new WebhookRepository();
 
 const authService = new AuthService(userRepo, workspaceAuthRepo);
 const workspaceService = new WorkspaceService(
@@ -45,6 +49,7 @@ const projectService = new ProjectService(projectRepo, workspaceRepo);
 const taskService = new TaskService(taskRepo, projectRepo, workspaceMemberRepo);
 const notificationService = new NotificationService(notificationRepo);
 const billingService = new BillingService(billingRepo, workspaceRepo);
+export const webhookService = new WebhookService(webhookRepo, workspaceRepo);
 
 export const authController = new AuthController(authService);
 export const workspaceController = new WorkspaceController(workspaceService);
@@ -54,3 +59,4 @@ export const notificationController = new NotificationController(
   notificationService
 );
 export const billingController = new BillingController(billingService);
+export const webhookController = new WebhookController(webhookService);
