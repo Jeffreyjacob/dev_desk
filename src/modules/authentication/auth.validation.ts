@@ -24,7 +24,7 @@ export const resendVerificationSchema = z.object({
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address").toLowerCase(),
-  password: z.string().min(1, "Password is "),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const forgetPasswordSchema = z.object({

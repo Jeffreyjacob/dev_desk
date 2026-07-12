@@ -53,7 +53,7 @@ type PrismaDelegate<T> = {
     cursor?: Prisma.Args<T, "findMany">["cursor"];
   }): Promise<any[]>;
 
-  count(args?: { where?: Prisma.Args<T, "findMany">["where"] }): Promise<any>;
+  count(args?: { where?: Prisma.Args<T, "count">["where"] }): Promise<any>;
 
   aggregate(args?: {
     where?: Prisma.Args<T, "aggregate">["where"];
@@ -97,7 +97,7 @@ type PrismaDelegate<T> = {
     where: Prisma.Args<T, "upsert">["where"];
     create: Prisma.Args<T, "upsert">["create"];
     update: Prisma.Args<T, "upsert">["update"];
-    include?: Prisma.Args<T, "update">["include"];
+    include?: Prisma.Args<T, "upsert">["include"];
   }): Promise<any>;
 };
 
